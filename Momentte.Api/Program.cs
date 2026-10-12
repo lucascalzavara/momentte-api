@@ -22,6 +22,8 @@ if (string.IsNullOrWhiteSpace(secret) || Encoding.UTF8.GetByteCount(secret) < 32
 var issuer = builder.Configuration["Jwt:Issuer"];
 var audience = builder.Configuration["Jwt:Audience"];
 var expiration = builder.Configuration.GetValue<int>("Jwt:AccessTokenExpirationMinutes");
+if (builder.Configuration.GetValue<int>("Jwt:RefreshTokenExpirationDays") is < 1 or > 365)
+    throw new InvalidOperationException("Configure Jwt:RefreshTokenExpirationDays (1 a 365).");
 if (string.IsNullOrWhiteSpace(issuer) || string.IsNullOrWhiteSpace(audience) || expiration is < 1 or > 1440)
     throw new InvalidOperationException("Configure Jwt:Issuer, Jwt:Audience e Jwt:AccessTokenExpirationMinutes (1 a 1440).");
 
@@ -38,6 +40,7 @@ builder.Services.AddSwaggerGen(options =>
 });
 builder.Services.AddSingleton<IDbConnectionFactory, NpgsqlConnectionFactory>();
 builder.Services.AddScoped<IUserRepository, UserRepository>();
+builder.Services.AddScoped<IRefreshTokenRepository, RefreshTokenRepository>();
 builder.Services.AddSingleton<IPasswordHasher, BCryptPasswordHasher>();
 builder.Services.AddScoped<ITokenService, JwtTokenService>();
 builder.Services.AddScoped<IAuthService, AuthService>();

@@ -12,6 +12,8 @@ psql -h localhost -U postgres -d momentte -v ON_ERROR_STOP=1 -f scripts/init.sql
 
 O script não é executado pela aplicação e não contém usuários ou senhas padrão. Pode ser repetido em um banco com o mesmo schema; não atualiza estruturas preexistentes. O índice único de e-mail também impede duplicatas em cadastros simultâneos.
 
+Se o banco já foi inicializado anteriormente, execute apenas `scripts/002_refresh_tokens.sql` antes de atualizar a aplicação. Novos bancos já recebem a tabela de refresh tokens pelo `init.sql`. Sem essa tabela, cadastro, login e refresh não podem persistir as sessões.
+
 ## Configuração e execução
 
 Configure os segredos localmente, substituindo os exemplos abaixo. Não versione credenciais:
@@ -46,6 +48,8 @@ Retorna **200** no mesmo formato do cadastro:
 ```json
 {
   "accessToken":"JWT",
+  "refreshToken":"TOKEN_ALEATORIO",
+  "refreshExpiresAt":"2026-10-27T21:00:00Z",
   "tokenType":"Bearer",
   "expiresIn":3600,
   "expiresAt":"2026-10-12T22:00:00Z",
@@ -55,9 +59,23 @@ Retorna **200** no mesmo formato do cadastro:
 
 E-mail inexistente e senha incorreta retornam **401** com a mesma mensagem. Dados inválidos retornam **400**. Erros seguem ProblemDetails, sem detalhes internos. Respostas nunca incluem hash ou senha. JWT contém `sub` (ID), `jti`, `email` e `name`. Use `Authorization: Bearer TOKEN` nos futuros endpoints protegidos.
 
-Cadastro/login têm limite compartilhado de 10 tentativas por minuto por IP, com **429** e `Retry-After`. O limitador é local a cada instância; ao implantar atrás de proxy, configure encaminhamento apenas de proxies confiáveis para preservar o IP correto.
+Os endpoints de autenticação têm limite compartilhado de 10 tentativas por minuto por IP, com **429** e `Retry-After`. O limitador é local a cada instância; ao implantar atrás de proxy, configure encaminhamento apenas de proxies confiáveis para preservar o IP correto.
 
-Esta etapa inclui apenas cadastro e login. Não há empresas, eventos, refresh tokens, confirmação de e-mail ou recuperação de senha. Ao expirar o token, faça login novamente. A Momentte.Web ainda não está integrada.
+### POST /api/v1/auth/refresh-token
+
+```json
+{"refreshToken":"TOKEN_RECEBIDO_NO_LOGIN_OU_ULTIMO_REFRESH"}
+```
+
+Retorna **200** no mesmo formato de login, incluindo novos access/refresh tokens. Não exige JWT válido: a credencial é o refresh token. Token desconhecido, expirado, revogado ou já consumido retorna **401**. Access token dura 60 minutos e refresh token 15 dias por padrão (`Jwt:RefreshTokenExpirationDays`, de 1 a 365). A rotação reinicia a validade de 15 dias; cada login cria uma sessão independente.
+
+O token é gerado com 64 bytes criptograficamente aleatórios; apenas seu hash SHA-256 é armazenado no banco. A transação revoga o token anterior e insere o substituto, com UPDATE condicional para que só uma requisição possa consumir cada token. Cadastro persiste usuário e refresh token juntos, também em transação. O cliente deve substituir ambos os tokens a cada resposta e compartilhar uma chamada de refresh entre requisições simultâneas.
+
+### POST /api/v1/auth/revoke-token
+
+Recebe o mesmo JSON do refresh e retorna **204**, inclusive para tokens desconhecidos ou já revogados. Revoga apenas a sessão informada. O access JWT emitido continua válido até sua expiração; sair no frontend descarta ambos os tokens. Quando a revogação não pode chegar ao servidor (por exemplo, offline), somente o logout local é garantido.
+
+A Momentte.Web integra cadastro, login, renovação automática e logout. Não há empresas, eventos, confirmação de e-mail ou recuperação de senha nesta etapa.
 
 ## Verificação
 
@@ -66,4 +84,4 @@ dotnet build Momentte.Api.slnx
 dotnet run --project tests/Momentte.Api.Checks
 ```
 
-As verificações usam um repositório em memória e validam normalização, hash BCrypt, duplicidade, login inválido, assinatura/claims do JWT e validação de entrada. Não substituem a verificação de integração após executar o SQL no seu PostgreSQL.
+As verificações usam repositórios em memória e validam cadastro/login, BCrypt, JWT, entrada, rotação, rejeição de tokens consumidos/expirados, hashes e revogação. Não substituem a verificação da transação e concorrência no PostgreSQL após executar o SQL.
