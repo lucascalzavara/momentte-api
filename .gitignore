@@ -1,0 +1,32 @@
+# Build e arquivos intermediários
+**/bin/
+**/obj/
+
+# IDEs e configurações pessoais
+.vs/
+.idea/
+.vscode/
+*.user
+*.suo
+*.userosscache
+*.sln.docstates
+
+# Testes e cobertura
+**/TestResults/
+**/coverage/
+*.coverage
+*.coveragexml
+
+# Logs e segredos locais
+*.log
+.env
+.env.*
+!.env.example
+**/appsettings.Local.json
+*.pfx
+*.p12
+
+# Sistema operacional
+.DS_Store
+Thumbs.db
+Desktop.ini
