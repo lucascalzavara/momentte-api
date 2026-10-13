@@ -44,6 +44,13 @@ builder.Services.AddScoped<IRefreshTokenRepository, RefreshTokenRepository>();
 builder.Services.AddSingleton<IPasswordHasher, BCryptPasswordHasher>();
 builder.Services.AddScoped<ITokenService, JwtTokenService>();
 builder.Services.AddScoped<IAuthService, AuthService>();
+builder.Services.AddScoped<IBillingRepository, BillingRepository>();
+builder.Services.AddScoped<IBillingService, BillingService>();
+builder.Services.AddHttpClient<IMercadoPagoGateway, MercadoPagoGateway>(client => client.Timeout = TimeSpan.FromSeconds(12));
+builder.Services.AddSingleton<IMediaStore, LocalMediaStore>();
+builder.Services.AddScoped<IEventService, EventService>();
+builder.Services.AddHostedService<EventRetentionWorker>();
+builder.Services.AddHostedService<BillingReconciliationWorker>();
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme).AddJwtBearer(options =>
 {
     options.MapInboundClaims = false;
@@ -81,6 +88,7 @@ app.UseExceptionHandler(errorApp => errorApp.Run(async context =>
     var exception = context.Features.Get<IExceptionHandlerFeature>()!.Error;
     var (status, title, detail) = exception switch
     {
+        Momentte.Api.Domain.Billing.BillingRuleException rule => (rule.Status, "Solicitação não concluída", rule.Message),
         ConflictException => (409, "Conflito de dados", exception.Message),
         UnauthorizedException => (401, "Não autorizado", exception.Message),
         _ => (500, "Erro interno no servidor", "Não foi possível processar a solicitação.")

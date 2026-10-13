@@ -1,5 +1,7 @@
 # Momentte.Api
 
+Planos, ciclo de vida dos eventos, armazenamento privado e Mercado Pago: consulte [docs/plans-and-payments.md](docs/plans-and-payments.md). Banco existente: execute `scripts/003_plans_events.sql` além dos scripts anteriores.
+
 API em .NET 10, seguindo a organização do Alicerce.Api: Controllers, Application (Interfaces/Implementations), Domain (DTOs/Entities/Exceptions) e Infrastructure (Interfaces/Implementations). PostgreSQL + Dapper, BCrypt e JWT. Sem Entity Framework ou migrations.
 
 ## Banco de dados

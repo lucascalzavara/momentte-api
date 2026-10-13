@@ -1,6 +1,7 @@
 # Build e arquivos intermediários
 **/bin/
 **/obj/
+**/App_Data/
 
 # IDEs e configurações pessoais
 .vs/
