@@ -20,7 +20,7 @@ public sealed class BillingRepository(IDbConnectionFactory factory) : IBillingRe
     public Task<BillingCycle?> Current(IDbConnection db, IDbTransaction tx, Guid owner) => db.QuerySingleOrDefaultAsync<BillingCycle>("""
         SELECT id AS Id, owner_id AS OwnerId, contract_id AS ContractId, plan_code AS PlanCode, starts_at AS StartsAt,
                ends_at AS EndsAt, activations_used AS ActivationsUsed
-        FROM billing_cycles WHERE owner_id=@owner AND starts_at<=CURRENT_TIMESTAMP AND ends_at>CURRENT_TIMESTAMP
+        FROM billing_cycles WHERE owner_id=@owner AND starts_at<=clock_timestamp() AND ends_at>clock_timestamp()
         ORDER BY starts_at DESC LIMIT 1
         """, new { owner }, tx);
     public Task<BillingContract?> Contract(IDbConnection db, IDbTransaction tx, Guid owner) => db.QuerySingleOrDefaultAsync<BillingContract>("""

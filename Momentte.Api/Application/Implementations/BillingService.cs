@@ -16,7 +16,8 @@ public sealed class BillingService(IBillingRepository repo, IDbConnectionFactory
         var cycle = await repo.Current(db, tx, owner);
         return new BillingOverview(BillingPolicy.Get(Product, cycle?.PlanCode ?? "free"), cycle, await repo.Contract(db, tx, owner),
             Product == "momentte" ? BillingPolicy.MomenttePlans : BillingPolicy.AlicercePlans,
-            await db.QueryAsync<BillingOrder>(OrderSelect + "WHERE owner_id=@owner ORDER BY created_at DESC LIMIT 50", new { owner }, tx), gateway.Available);
+            await db.QueryAsync<BillingOrder>(OrderSelect + "WHERE owner_id=@owner ORDER BY created_at DESC LIMIT 50", new { owner }, tx), gateway.Available)
+            {AvailableEventCredits=await db.ExecuteScalarAsync<int>("SELECT count(*) FROM billing_orders WHERE owner_id=@owner AND kind='event' AND status='paid' AND event_id IS NULL",new{owner},tx)};
     }, ct);
     public async Task<object> Checkout(Guid owner, string email, CheckoutRequest request, CancellationToken ct)
     {
@@ -39,15 +40,12 @@ public sealed class BillingService(IBillingRepository repo, IDbConnectionFactory
             return new BillingContract { Id = id, OwnerId = owner, PlanCode = plan.Code };
         }
         var old = await db.QuerySingleOrDefaultAsync<BillingOrder>(OrderSelect + "WHERE owner_id=@owner AND request_key=@key", new { owner, key = request.RequestKey }, tx);
-        if (old is not null) { if(old.Kind != request.Kind || old.EventId != request.EventId && old.Kind == "event") throw new BillingRuleException(409, "Chave reutilizada para outra contratação."); return old; }
+        if (old is not null) { if(old.Kind != request.Kind) throw new BillingRuleException(409, "Chave reutilizada para outra contratação."); return old; }
         var order = new BillingOrder { Id = request.RequestKey, OwnerId = owner, RequestKey = request.RequestKey, Kind = request.Kind, PlanCode = request.PlanCode };
         if (request.Kind == "event" && Product == "momentte")
         {
-            var exists = await db.ExecuteScalarAsync<int>("SELECT count(*) FROM events WHERE id=@id AND owner_id=@owner AND activated_at IS NULL AND deleted_at IS NULL", new { id = request.EventId, owner }, tx);
-            if (exists != 1) throw new BillingRuleException(409, "Compre o pacote antes de iniciar o evento.");
-            if (await db.ExecuteScalarAsync<int>("SELECT count(*) FROM billing_orders WHERE event_id=@id AND status IN ('pending','paid')", new { id = request.EventId }, tx) > 0)
-                throw new BillingRuleException(409, "Este evento já possui uma compra paga ou pendente.");
-            order.EventId = request.EventId; order.PlanCode = "paid-event";
+            if (request.EventId is not null) throw new BillingRuleException(400,"Compras avulsas são créditos da conta. Não informe um evento.");
+            order.EventId = null; order.PlanCode = "paid-event";
             order.AmountCents = BillingPolicy.EventPrice(cycle is not null, cycle?.ActivationsUsed ?? 0);
         }
         else if (request.Kind == "upgrade" && Product == "alicerce" && cycle is not null && contract is { Cancelled: false, ProviderId: not null })

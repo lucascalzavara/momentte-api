@@ -64,6 +64,7 @@ foreach (var invalid in new[] {
 })
     Check(!Validator.TryValidateObject(invalid, new ValidationContext(invalid), [], true), "Rejeição de cadastro inválido");
 await BillingChecks.Run();
+EventChecks.Run();
 Console.WriteLine("Todas as verificações passaram. Repositório em memória; não acessa PostgreSQL.");
 
 static void Check(bool condition, string name)

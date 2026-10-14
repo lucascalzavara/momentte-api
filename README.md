@@ -1,6 +1,6 @@
 # Momentte.Api
 
-Planos, ciclo de vida dos eventos, armazenamento privado e Mercado Pago: consulte [docs/plans-and-payments.md](docs/plans-and-payments.md). Banco existente: execute `scripts/003_plans_events.sql` além dos scripts anteriores.
+Planos, ciclo de vida dos eventos, armazenamento privado e Mercado Pago: consulte [docs/plans-and-payments.md](docs/plans-and-payments.md). Banco existente: execute os scripts pendentes até `scripts/004_event_participation.sql`. Veja [docs/events.md](docs/events.md).
 
 API em .NET 10, seguindo a organização do Alicerce.Api: Controllers, Application (Interfaces/Implementations), Domain (DTOs/Entities/Exceptions) e Infrastructure (Interfaces/Implementations). PostgreSQL + Dapper, BCrypt e JWT. Sem Entity Framework ou migrations.
 
@@ -14,7 +14,7 @@ psql -h localhost -U postgres -d momentte -v ON_ERROR_STOP=1 -f scripts/init.sql
 
 O script não é executado pela aplicação e não contém usuários ou senhas padrão. Pode ser repetido em um banco com o mesmo schema; não atualiza estruturas preexistentes. O índice único de e-mail também impede duplicatas em cadastros simultâneos.
 
-Se o banco já foi inicializado anteriormente, execute apenas `scripts/002_refresh_tokens.sql` antes de atualizar a aplicação. Novos bancos já recebem a tabela de refresh tokens pelo `init.sql`. Sem essa tabela, cadastro, login e refresh não podem persistir as sessões.
+Se o banco já foi inicializado anteriormente, execute os scripts numerados ainda não aplicados: 002, 003 e 004, nessa ordem. Novos bancos já recebem a tabela de refresh tokens pelo `init.sql`. Sem essa tabela, cadastro, login e refresh não podem persistir as sessões.
 
 ## Configuração e execução
 
@@ -77,7 +77,7 @@ O token é gerado com 64 bytes criptograficamente aleatórios; apenas seu hash S
 
 Recebe o mesmo JSON do refresh e retorna **204**, inclusive para tokens desconhecidos ou já revogados. Revoga apenas a sessão informada. O access JWT emitido continua válido até sua expiração; sair no frontend descarta ambos os tokens. Quando a revogação não pode chegar ao servidor (por exemplo, offline), somente o logout local é garantido.
 
-A Momentte.Web integra cadastro, login, renovação automática e logout. Não há empresas, eventos, confirmação de e-mail ou recuperação de senha nesta etapa.
+A Momentte.Web integra cadastro, login, renovação automática e logout. Eventos e participação estão implementados. Confirmação de e-mail, recuperação de senha e validação de idade não estão incluídas.
 
 ## Verificação
 

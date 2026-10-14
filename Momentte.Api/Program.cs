@@ -70,6 +70,9 @@ builder.Services.AddCors(options => options.AddPolicy("web", policy =>
 }));
 builder.Services.AddRateLimiter(options =>
 {
+    options.AddPolicy("submissions",context=>RateLimitPartition.GetFixedWindowLimiter(
+        context.User.FindFirst("sub")?.Value??context.Connection.RemoteIpAddress?.ToString()??"unknown",
+        _=>new FixedWindowRateLimiterOptions{PermitLimit=30,Window=TimeSpan.FromMinutes(1),QueueLimit=0}));
     options.RejectionStatusCode = StatusCodes.Status429TooManyRequests;
     options.AddPolicy("auth", context => RateLimitPartition.GetFixedWindowLimiter(
         context.Connection.RemoteIpAddress?.ToString() ?? "unknown",

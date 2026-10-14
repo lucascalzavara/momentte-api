@@ -45,4 +45,5 @@ public sealed class CheckoutRequest
     public Guid RequestKey { get; set; }
 }
 public sealed class PlanChangeRequest { [Required] public string PlanCode { get; set; } = "free"; }
-public sealed record BillingOverview(PlanDefinition Plan, BillingCycle? Cycle, BillingContract? Contract, IReadOnlyList<PlanDefinition> Plans, IEnumerable<BillingOrder> Orders, bool CheckoutAvailable);
+public sealed record BillingOverview(PlanDefinition Plan, BillingCycle? Cycle, BillingContract? Contract, IReadOnlyList<PlanDefinition> Plans, IEnumerable<BillingOrder> Orders, bool CheckoutAvailable)
+{public int AvailableEventCredits {get;init;} }
