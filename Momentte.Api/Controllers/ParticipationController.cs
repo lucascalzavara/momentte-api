@@ -14,7 +14,7 @@ public sealed class ParticipationController(IEventService service):ControllerBas
     [HttpPost("{code}/join")] public async Task<IActionResult> Join(string code,CancellationToken ct){await service.Join(UserId,code,ct);return Ok(await service.PublicInfo(code,ct));}
     [HttpGet("{code}/submissions")] public async Task<IActionResult> Mine(string code,CancellationToken ct)=>Ok(await service.Submissions(UserId,null,code,false,ct));
     [HttpPost("{code}/submissions"),RequestSizeLimit(21_000_000),EnableRateLimiting("submissions")]
-    public async Task<IActionResult> Submit(string code,[FromForm]string? text,[FromForm]IFormFile? file,[FromForm]bool showName,CancellationToken ct)
+    public async Task<IActionResult> Submit(string code,[FromForm]string? text,IFormFile? file,[FromForm]bool showName,CancellationToken ct)
     {await using var input=file?.OpenReadStream();return StatusCode(201,await service.Submit(UserId,code,text,input,showName,ct));}
     [HttpGet("{code}/submissions/{mediaId:guid}/preview")] public async Task<IActionResult> Preview(string code,Guid mediaId,CancellationToken ct){var file=await service.Preview(UserId,null,code,mediaId,ct);return File(file.Stream,file.Type);}
     [HttpGet("{code}/logo")] public async Task<IActionResult> Logo(string code,CancellationToken ct){var file=await service.PublicLogo(UserId,code,ct);return File(file.Stream,file.Type);}

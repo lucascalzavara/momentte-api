@@ -12,13 +12,15 @@ Crie um banco PostgreSQL 13+ dedicado chamado `momentte` e execute manualmente [
 psql -h localhost -U postgres -d momentte -v ON_ERROR_STOP=1 -f scripts/init.sql
 ```
 
-O script não é executado pela aplicação e não contém usuários ou senhas padrão. Pode ser repetido em um banco com o mesmo schema; não atualiza estruturas preexistentes. O índice único de e-mail também impede duplicatas em cadastros simultâneos.
+O script não é executado pela aplicação e não contém usuários ou senhas padrão. É destinado à primeira instalação em um banco vazio, cria o schema atual em uma única transação e falha se as tabelas já existirem. Não execute os scripts incrementais 002, 003 e 004 depois dele em instalações novas. O índice único de e-mail também impede duplicatas em cadastros simultâneos.
 
 Se o banco já foi inicializado anteriormente, execute os scripts numerados ainda não aplicados: 002, 003 e 004, nessa ordem. Novos bancos já recebem a tabela de refresh tokens pelo `init.sql`. Sem essa tabela, cadastro, login e refresh não podem persistir as sessões.
 
 ## Configuração e execução
 
-Configure os segredos localmente, substituindo os exemplos abaixo. Não versione credenciais:
+Em desenvolvimento, todas as configurações estão em `Momentte.Api/appsettings.Development.json`: conexão PostgreSQL, JWT, CORS, cobrança/Mercado Pago, armazenamento e logs. Preencha a senha local do PostgreSQL e, quando for testar pagamentos, as credenciais de teste do Mercado Pago. A chave JWT incluída é exclusiva para desenvolvimento. Os campos do Mercado Pago permanecem vazios até a configuração; o checkout fica indisponível nesse estado. Para pagamentos, substitua as URLs locais por URLs HTTPS acessíveis ao provedor, incluindo a API pública para os webhooks.
+
+O perfil `https` já define `ASPNETCORE_ENVIRONMENT=Development`. User-secrets e variáveis de ambiente continuam tendo prioridade sobre o arquivo; caso já estejam definidos, seus valores prevalecem. Não versione credenciais reais. Como alternativa ao arquivo, configure os segredos localmente, substituindo os exemplos abaixo:
 
 ```sh
 dotnet user-secrets set "ConnectionStrings:DefaultConnection" "Host=localhost;Port=5432;Database=momentte;Username=SEU_USUARIO;Password=SUA_SENHA" --project Momentte.Api
