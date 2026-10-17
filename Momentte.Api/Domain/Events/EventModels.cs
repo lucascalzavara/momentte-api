@@ -11,6 +11,7 @@ public sealed class EventRecord
     public string PublicCode { get; set; } = "";
     public string MediaMode { get; set; } = "images";
     public bool ModerationEnabled { get; set; }
+    public bool ShowQrCode { get; set; } = true;
     public string TextColor { get; set; } = "#fffaf1";
     public string FontFamily { get; set; } = "sans";
     public string TextScale { get; set; } = "medium";
@@ -44,6 +45,7 @@ public sealed class EventRequest
     [RegularExpression("^#[0-9a-fA-F]{6}$")] public string? ThemeColor { get; set; }
     [Required, RegularExpression("^(images|texts|both)$")] public string MediaMode { get; set; } = "images";
     public bool ModerationEnabled { get; set; }
+    public bool ShowQrCode { get; set; } = true;
     [Required, RegularExpression("^#[0-9a-fA-F]{6}$")] public string TextColor { get; set; } = "#fffaf1";
     [Required, RegularExpression("^(sans|serif|rounded)$")] public string FontFamily { get; set; } = "sans";
     [Required, RegularExpression("^(small|medium|large)$")] public string TextScale { get; set; } = "medium";

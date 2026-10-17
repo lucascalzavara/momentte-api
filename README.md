@@ -1,6 +1,6 @@
 # Momentte.Api
 
-Planos, ciclo de vida dos eventos, armazenamento privado e Mercado Pago: consulte [docs/plans-and-payments.md](docs/plans-and-payments.md). Banco existente: execute os scripts pendentes até `scripts/004_event_participation.sql`. Veja [docs/events.md](docs/events.md).
+Planos, ciclo de vida dos eventos, armazenamento privado e Mercado Pago: consulte [docs/plans-and-payments.md](docs/plans-and-payments.md). Banco existente: execute os scripts pendentes até `scripts/005_event_screen_qr.sql`. Veja [docs/events.md](docs/events.md).
 
 API em .NET 10, seguindo a organização do Alicerce.Api: Controllers, Application (Interfaces/Implementations), Domain (DTOs/Entities/Exceptions) e Infrastructure (Interfaces/Implementations). PostgreSQL + Dapper, BCrypt e JWT. Sem Entity Framework ou migrations.
 
@@ -12,9 +12,9 @@ Crie um banco PostgreSQL 13+ dedicado chamado `momentte` e execute manualmente [
 psql -h localhost -U postgres -d momentte -v ON_ERROR_STOP=1 -f scripts/init.sql
 ```
 
-O script não é executado pela aplicação e não contém usuários ou senhas padrão. É destinado à primeira instalação em um banco vazio, cria o schema atual em uma única transação e falha se as tabelas já existirem. Não execute os scripts incrementais 002, 003 e 004 depois dele em instalações novas. O índice único de e-mail também impede duplicatas em cadastros simultâneos.
+O script não é executado pela aplicação e não contém usuários ou senhas padrão. É destinado à primeira instalação em um banco vazio, cria o schema atual em uma única transação e falha se as tabelas já existirem. Não execute os scripts incrementais 002, 003, 004 e 005 depois dele em instalações novas. O índice único de e-mail também impede duplicatas em cadastros simultâneos.
 
-Se o banco já foi inicializado anteriormente, execute os scripts numerados ainda não aplicados: 002, 003 e 004, nessa ordem. Novos bancos já recebem a tabela de refresh tokens pelo `init.sql`. Sem essa tabela, cadastro, login e refresh não podem persistir as sessões.
+Se o banco já foi inicializado anteriormente, execute os scripts numerados ainda não aplicados: 002, 003, 004 e 005, nessa ordem. Novos bancos já recebem a tabela de refresh tokens pelo `init.sql`. Sem essa tabela, cadastro, login e refresh não podem persistir as sessões.
 
 ## Configuração e execução
 

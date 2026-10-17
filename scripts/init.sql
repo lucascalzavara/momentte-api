@@ -97,6 +97,7 @@ CREATE TABLE events (
     ended_at TIMESTAMPTZ,
     media_mode TEXT NOT NULL DEFAULT 'images',
     moderation_enabled BOOLEAN NOT NULL DEFAULT FALSE,
+    show_qr_code BOOLEAN NOT NULL DEFAULT TRUE,
     paid BOOLEAN NOT NULL DEFAULT FALSE,
     activation_source TEXT,
     cycle_id UUID REFERENCES billing_cycles(id),

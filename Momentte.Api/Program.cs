@@ -48,6 +48,8 @@ builder.Services.AddScoped<IBillingRepository, BillingRepository>();
 builder.Services.AddScoped<IBillingService, BillingService>();
 builder.Services.AddHttpClient<IMercadoPagoGateway, MercadoPagoGateway>(client => client.Timeout = TimeSpan.FromSeconds(12));
 builder.Services.AddSingleton<IMediaStore, LocalMediaStore>();
+builder.Services.AddSingleton(TimeProvider.System);
+builder.Services.AddSingleton<EventArchiveTickets>();
 builder.Services.AddScoped<IEventService, EventService>();
 builder.Services.AddHostedService<EventRetentionWorker>();
 builder.Services.AddHostedService<BillingReconciliationWorker>();
@@ -75,6 +77,9 @@ builder.Services.AddCors(options => options.AddPolicy("web", policy =>
 }));
 builder.Services.AddRateLimiter(options =>
 {
+    options.AddPolicy("archives", context => RateLimitPartition.GetFixedWindowLimiter(
+        context.User.FindFirst("sub")?.Value ?? "unknown",
+        _ => new FixedWindowRateLimiterOptions { PermitLimit = 2, Window = TimeSpan.FromMinutes(1), QueueLimit = 0 }));
     options.AddPolicy("submissions", context => RateLimitPartition.GetFixedWindowLimiter(
         context.User.FindFirst("sub")?.Value ?? context.Connection.RemoteIpAddress?.ToString() ?? "unknown",
         _ => new FixedWindowRateLimiterOptions { PermitLimit = 30, Window = TimeSpan.FromMinutes(1), QueueLimit = 0 }));

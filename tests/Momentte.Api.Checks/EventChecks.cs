@@ -30,6 +30,9 @@ public static class EventChecks
         draft.Paid=true;
         Check(draft.EffectiveBackground=="#123456"&&draft.EffectiveFont=="serif"&&!draft.UsesMomentteBrand,"Pago aplica aparência configurada");
         Check(!JsonSerializer.Serialize(draft).Contains("private/image"),"Caminho privado da logo não aparece no JSON");
+        Check(new EventRequest().ShowQrCode && new EventRecord().ShowQrCode,"QR habilitado por padrão para compatibilidade");
+        var withoutQr=JsonSerializer.Deserialize<EventRequest>("{\"showQrCode\":false}",new JsonSerializerOptions{PropertyNameCaseInsensitive=true});
+        Check(withoutQr is not null&&!withoutQr.ShowQrCode,"Opção de ocultar QR recebida pela API");
         var media=new MediaRecord{RelativePath="private/photo",Text="<script>texto</script>"};
         Check(media.HasImage&&!JsonSerializer.Serialize(media).Contains("private/photo"),"Envio com legenda não expõe caminho privado");
         var ended=new EventRecord{EndsAt=now.AddHours(4),EndedAt=now.AddHours(3)};
